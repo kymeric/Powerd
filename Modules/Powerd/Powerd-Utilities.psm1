@@ -1,18 +1,14 @@
-$powerdUtilities = [IO.DirectoryInfo]"$($env:LOCALAPPDATA)\Powerd\Utilities";
+Import-Module "$PSScriptRoot\Powerd-Common.psm1";
 
-#Ensure Utilities directory exists
-if(! $powerdUtilities.Exists) {
-    [IO.Directory]::CreateDirectory($powerdUtilities.FullName);
-}
-
-#Ensure it's on the path
-if(! ($env:Path -contains $powerdUtilities.FullName)) {
-    $env:Path += ";$($powerdUtilities.FullName)";
+function Initialize-Utilities {
+    $config = Get-PowerdConfig;
+    if($config.Utilities) {
+        $config.Utilities | % { Set-Alias $_.Name $ExecutionContext.InvokeCommand.ExpandString($_.Path) -Scope 'global' };
+    }
 }
 
 #Set a utility to point to an executable/script
 function Set-Utility([string]$Path, [string]$Name) {
-    #TODO: Scan $Executable for special paths and replace (make portable)
     $executable = [IO.FileInfo](Convert-Path $Path);
     if(! $executable.Exists) {
         throw "$($executable.FullName) not found";
@@ -22,7 +18,23 @@ function Set-Utility([string]$Path, [string]$Name) {
         $Name = [IO.Path]::GetFileNameWithoutExtension($executable.FullName);
     }
 
-    $utility = [IO.FileInfo]"$powerdUtilities\$Name.cmd";
-    Set-Content $utility -Value "@ECHO OFF`r`n`"$executable`" %*";
+    $executable = Get-PortablePath $executable;
+
+    $config = Get-PowerdConfig;
+    if(! $config.Utilities) {
+        Add-Member -InputObject $config -MemberType NoteProperty -Name 'Utilities' -Value @();
+    }
+
+    $existing = $config.Utilities | ? { $_.Name -eq $Name };
+
+    if($existing) {
+        throw "Existing entry: $existing";
+    }
+
+    $config.Utilities += @{Name = $Name; Path = $executable};
+
+    Set-PowerdConfig $config;
+    Set-Alias $Name $ExecutionContext.InvokeCommand.ExpandString($executable) -Scope 'global';
 }
 
+Initialize-Utilities;
