@@ -66,7 +66,7 @@ Copyright = '(c) 2017 Jon Stelly. All rights reserved.'
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @('.\Powerd-Common.psm1', '.\Powerd-Utilities.psm1', '.\Powerd-Development.psm1')
+NestedModules = @('Powerd-Common', 'Powerd-Utilities', 'Powerd-Development')
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 # FunctionsToExport = @()

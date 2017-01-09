@@ -1,5 +1,3 @@
-Import-Module "$PSScriptRoot\Powerd-Common.psm1";
-
 function Initialize-Utilities {
     $config = Get-PowerdConfig;
     if($config.Utilities) {

@@ -1,3 +1,5 @@
+Set-Variable -Name "Powerd" -Value @{Config = (Get-PowerdFile "Config.json")} -Scope global;
+
 function Get-PowerdFile([string]$Name) {
     $powerdDir = [IO.DirectoryInfo]"$($env:HOME)\Powerd";
     return [IO.FileInfo]"$powerdDir\$Name";
@@ -76,6 +78,19 @@ function Set-Path([string]$Path, [string]$Name) {
     
     Set-PowerdConfig $config;
     Set-Variable $Name $Path -Scope 'global';
+}
+
+
+function Invoke-BatchFile([IO.FileInfo]$File) {
+	if(! $File.Exists) {
+		return;
+	}
+
+	cmd /c " `"$File`" && set"  | .{process{
+	    if ($_ -match '^([^=]+)=(.*)') {
+        	Set-Content "env:\$($matches[1])" $matches[2];
+    	}
+	}};
 }
 
 function Initialize-Paths {
