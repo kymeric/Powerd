@@ -22,26 +22,29 @@ if($Development) {
         cmd /c mklink /d $link $target;
     }
 
-
-    $profilePath = "$docs\WindowsPowerShell\Profile.ps1";
+    $profilePath = [IO.FileInfo]$profile;
+    if(! $profile.Exists) {
+        Set-Content $profilePath -Value "";
+    }
     $existing = Get-Content $profilePath;
-    if(! $existing -like '*posh-git*') {
+    if(! ($existing -like '*posh-git*')) {
         Write-Host "Adding 'Import-Module posh-git;' to your PowerShell Profile";
         Add-Content -Value "Import-Module posh-git;" -Path $profilePath;
     }
-    if(! $existing -like '*Powerd*') {
+    if(! ($existing -like '*Powerd*')) {
         Write-Host "Adding 'Import-Module Powerd;' to your PowerShell Profile";
         Add-Content -Value "Import-Module Powerd;" -Path $profilePath;
     }
 
-    if(! $existing -like '*prompt*') {
+    if(! ($existing -like '*function prompt*')) {
+        Write-Host "Adding 'function prompt { ... }' to your PowerShell Profile";
         $gitPrompt = @"
 
 function prompt {
     Write-GitPrompt;
 }
 "@;
-        Add-Content -Value $gitPrompt -Path "$docs\WindowsPowerShell\Profile.ps1";
+        Add-Content -Value $gitPrompt -Path $profilePath;
     }
 } else {
     throw "Not implemented";
