@@ -1,14 +1,12 @@
-# Initialize Developer Environment from VS 2015 batch file
+# Initialize Developer Environment from VS batch file
 function Initialize-Development {
 	$config = Get-PowerdConfig;
-
-	if($config.Development.VisualStudioVersion) {
-		$regKey = [Microsoft.Win32.RegistryKey](Get-Item -Path "HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\$($config.Development.VisualStudioVersion)");
-
-		if($regKey) {
-			$ide = $regKey.GetValue('InstallDir');
-			$batchFile = Convert-Path (Join-Path -Path $ide -ChildPath "..\Tools\VsDevCmd.bat");
-			Invoke-BatchFile $batchFile;
+	
+	if($config.Development.VSDevCmd) {
+		$file = [IO.FileInfo]$ExecutionContext.InvokeCommand.ExpandString($config.Development.VSDevCmd);
+		if($file.Exists) {		
+			Write-Host "Initializing Visual Studio Environment";
+			Invoke-BatchFile $file;		
 		}
 	}
 }
