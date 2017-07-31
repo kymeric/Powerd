@@ -7,7 +7,7 @@ function Get-PowerdFile([string]$Name) {
 
 function Get-PowerdConfig() {
     $file = Get-PowerdFile "Config.json";
-    if(! $file.Exists) {
+    if (! $file.Exists) {
         return @{};
     }
     return Get-Content -Path $file | ConvertFrom-Json;
@@ -15,7 +15,7 @@ function Get-PowerdConfig() {
 
 function Set-PowerdConfig($Config) {
     $file = Get-PowerdFile "Config.json";
-    if(! $file.Directory.Exists) {
+    if (! $file.Directory.Exists) {
         [IO.Directory]::CreateDirectory($file.Directory.FullName);
     }
     $Config | ConvertTo-Json | Set-Content -Path $file -Force;
@@ -23,13 +23,13 @@ function Set-PowerdConfig($Config) {
 
 function Get-SpecialPortablePaths {
     return [enum]::GetValues([Environment+SpecialFolder]) `
-    | % { $path = [Environment]::GetFolderPath($_); if($path) { @{Name = "([Environment]::GetFolderPath([Environment+SpecialFolder]::$_))"; Path = $path}; } } `
-    | Sort { $_.Path.Length } -Descending | ConvertTo-Json | ConvertFrom-Json;
+        | % { $path = [Environment]::GetFolderPath($_); if ($path) { @{Name = "([Environment]::GetFolderPath([Environment+SpecialFolder]::$_))"; Path = $path}; } } `
+        | Sort { $_.Path.Length } -Descending | ConvertTo-Json | ConvertFrom-Json;
 }
 
 function Get-PowerdPortablePaths {
     $config = Get-PowerdConfig;
-    if(! $config.Paths) {
+    if (! $config.Paths) {
         return @();
     }
     $config.Paths | % { $_.Path = $ExecutionContext.InvokeCommand.ExpandString($_.Path); };
@@ -45,8 +45,8 @@ function Get-PortablePath([string]$Path) {
     # $paths | % { Write-Host "Entry: $_"; };
 
     $Path = (Convert-Path $Path).Trim('\', '/');
-    foreach($entry in $paths) {
-        if($Path -like "$($entry.Path)*") {
+    foreach ($entry in $paths) {
+        if ($Path -like "$($entry.Path)*") {
             $relativePath = $Path.Substring($entry.Path.Length);
             $ret = "`$$($entry.Name)\$relativePath".Trim('\', '/');
             return $ret;
@@ -59,18 +59,18 @@ function Get-PortablePath([string]$Path) {
 function Set-Path([string]$Path, [string]$Name) {
     $Path = Get-PortablePath ($Path);
 
-    if(! $Name) {
+    if (! $Name) {
         $Name = [IO.Path]::GetFileName($ExecutionContext.InvokeCommand.ExpandString($Path));
     }
 
     $config = Get-PowerdConfig;
-    if(! $config.Paths) {
+    if (! $config.Paths) {
         Add-Member -InputObject $config -MemberType NoteProperty -Name 'Paths' -Value @();
     }
 
     $existing = $config.Paths | ? { $_.Name -eq $Name };
 
-    if($existing) {
+    if ($existing) {
         throw "Existing entry: $existing";
     }
 
@@ -80,22 +80,61 @@ function Set-Path([string]$Path, [string]$Name) {
     Set-Variable $Name $Path -Scope 'global';
 }
 
+function Get-BatchFileEnvironmentEffect([IO.FileInfo]$File, [string]$Arg = $null) {
+    if(! $File.Exists) {
+        return $ret;
+    }
+    $ret = @{ };
 
-function Invoke-BatchFile([IO.FileInfo]$File) {
-	if(! $File.Exists) {
-		return;
-	}
+    $applyMarker = 'APPLYBATCHFILE';
 
-	cmd /c " `"$File`" && set"  | .{process{
-	    if ($_ -match '^([^=]+)=(.*)') {
-        	Set-Content "env:\$($matches[1])" $matches[2];
-    	}
-	}};
+    $cmd = "set && echo $applyMarker && `"$File`" $Arg && set";
+
+    $before = @{};
+    $after = @{};
+    $isAfter = $false;
+
+    Write-Host "Executing: cmd /c $cmd";
+
+    cmd /c $cmd | . { 
+        process {
+            $line = $_.Trim();
+            if ($line -eq $applyMarker) {
+                $isAfter = $true;
+            }
+            elseif ($line -match '^([^=]+)=(.*)') {
+                $variable = $matches[1].Trim();
+                $value = $matches[2].Trim();
+                if ($isAfter) {
+                    $after[$variable] = $value;
+                }
+                else {
+                    $before[$variable] = $value;
+                }
+            }
+        }
+    }
+
+    $after.Keys | % {
+        $a = $after[$_];
+        $b = $before[$_];
+
+        if (!$b) {
+            $ret[$_] = $a;
+        }
+        else {
+            if($a -ne $b) {
+                $ret[$_] = $a.Replace($b, "");
+            }
+        }
+    }
+
+    return $ret;
 }
 
 function Initialize-Paths {
     $config = Get-PowerdConfig;
-    if($config.Paths) {
+    if ($config.Paths) {
         $config.Paths;
         $config.Paths | % { Set-Variable $_.Name $ExecutionContext.InvokeCommand.ExpandString($_.Path) -Scope 'global'; };
     }

@@ -2,12 +2,17 @@
 function Initialize-Development {
 	$config = Get-PowerdConfig;
 	
-	if($config.Development.VSDevCmd) {
+	$envCacheFile = Get-PowerdFile "Development-Environment-Cache-$([Environment]::MachineName).ps1"
+	if(!$envCacheFile.Exists -and $config.Development.VSDevCmd) {
 		$file = [IO.FileInfo]$ExecutionContext.InvokeCommand.ExpandString($config.Development.VSDevCmd);
 		if($file.Exists) {		
-			Write-Host "Initializing Visual Studio Environment";
-			Invoke-BatchFile $file;		
+			$diff = Get-BatchFileEnvironmentEffect -File $file -Arg "-arch=amd64";
+			$script = $diff.Keys | % { "`$env:$($_) += '$($diff[$_])'" }
+			Set-Content -Path $envCacheFile -Value $script;
 		}
+	}
+	if($envCacheFile.Exists) {
+		. $envCacheFile;
 	}
 }
 
