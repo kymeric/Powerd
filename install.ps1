@@ -35,17 +35,6 @@ if($Development) {
         Write-Host "Adding 'Import-Module Powerd;' to your PowerShell Profile";
         Add-Content -Value "Import-Module Powerd;" -Path $profilePath;
     }
-
-    if(! ($existing -like '*function prompt*')) {
-        Write-Host "Adding 'function prompt { ... }' to your PowerShell Profile";
-        $gitPrompt = @"
-
-function prompt {
-    Write-GitPrompt;
-}
-"@;
-        Add-Content -Value $gitPrompt -Path $profilePath;
-    }
 } else {
     throw "Not implemented";
 }
