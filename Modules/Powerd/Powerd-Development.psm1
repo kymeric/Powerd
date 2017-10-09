@@ -3,7 +3,8 @@ function Initialize-Development {
 	$config = Get-PowerdConfig;
 
 	$editions = @('Enterprise', 'Professional', 'Community', 'BuildTools');
-	$envCacheFile = Get-PowerdFile "Development-Environment-Cache-$([Environment]::MachineName).ps1"
+	$envCacheFile = Get-PowerdFile "Cache\Development-Environment-$([Environment]::MachineName).ps1"
+
 	if(!$envCacheFile.Exists -and $config.Development.VSDevCmd) {
 		foreach($edition in $editions)
 		{
@@ -11,6 +12,12 @@ function Initialize-Development {
 			if($vsDevCmd.Exists) {		
 				$diff = Get-BatchFileEnvironmentEffect -File $vsDevCmd -Arg "-arch=amd64";
 				$script = $diff.Keys | % { "`$env:$($_) += '$($diff[$_])'" }
+
+				if($envCacheFile.Directory.Exists -eq $false) {
+					Write-Host "Creating: $($envCacheFile.DirectoryName)";
+					[IO.Directory]::CreateDirectory($envCacheFile.DirectoryName);
+				}
+				Write-Host "Updating $($envCacheFile.Name)";
 				Set-Content -Path $envCacheFile -Value $script;
 				break;
 			}
