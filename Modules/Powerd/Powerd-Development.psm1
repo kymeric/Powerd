@@ -11,7 +11,10 @@ function Initialize-Development {
 			$vsDevCmd = [IO.FileInfo]"$([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86))\Microsoft Visual Studio\2017\$edition\Common7\Tools\VSDevCmd.bat";
 			if($vsDevCmd.Exists) {		
 				$diff = Get-BatchFileEnvironmentEffect -File $vsDevCmd -Arg "-arch=amd64";
-				$script = $diff.Keys | % { "`$env:$($_) += '$($diff[$_])'" }
+				$script = $diff.Keys | % {
+					$prefix = if($_  -eq "PATH") { ";" } else { "" };
+					"`$env:$($_) += '$prefix$($diff[$_])'"
+				};
 
 				if($envCacheFile.Directory.Exists -eq $false) {
 					Write-Host "Creating: $($envCacheFile.DirectoryName)";
