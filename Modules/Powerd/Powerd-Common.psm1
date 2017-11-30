@@ -119,13 +119,11 @@ function Get-BatchFileEnvironmentEffect([IO.FileInfo]$File, [string]$Arg = $null
         $a = $after[$_];
         $b = $before[$_];
 
-        if (!$b) {
-            $ret[$_] = $a;
-        }
-        else {
-            if($a -ne $b) {
-                $ret[$_] = $a.Replace($b, "");
-            }
+        if ($a -ne $b) {
+            $ret[$_] = @{
+                Before = $before[$_]
+                After = $after[$_]
+            };
         }
     }
 
