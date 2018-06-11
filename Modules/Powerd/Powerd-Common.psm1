@@ -1,7 +1,8 @@
 Set-Variable -Name "Powerd" -Value @{Config = (Get-PowerdFile "Config.json")} -Scope global;
 
 function Get-PowerdFile([string]$Name) {
-    $powerdDir = [IO.DirectoryInfo]"$($env:HOME)\Powerd";
+    $homeDir = if($env:HOME) { $env:HOME } else { $env:USERPROFILE }
+    $powerdDir = [IO.DirectoryInfo]"$homeDir\Powerd";
     return [IO.FileInfo]"$powerdDir\$Name";
 }
 
