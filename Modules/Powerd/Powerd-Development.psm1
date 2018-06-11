@@ -5,7 +5,7 @@ function Initialize-Development {
 	$editions = @('Enterprise', 'Professional', 'Community', 'BuildTools');
 	$envCacheFile = Get-PowerdFile "Cache\Development-Environment-$([Environment]::MachineName).ps1"
 
-	if(!$envCacheFile.Exists -and $config.Development.VSDevCmd) {
+	if($envCacheFile -and !$envCacheFile.Exists -and !$config.Development.IsDisabled) {
 		foreach($edition in $editions)
 		{
 			$vsDevCmd = [IO.FileInfo]"$([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86))\Microsoft Visual Studio\2017\$edition\Common7\Tools\VSDevCmd.bat";
@@ -25,7 +25,7 @@ function Initialize-Development {
 					Write-Host "Creating: $($envCacheFile.DirectoryName)";
 					[IO.Directory]::CreateDirectory($envCacheFile.DirectoryName);
 				}
-				Write-Host "Updating $($envCacheFile.Name)";
+				Write-Host "Updating $envCacheFile";
 				Set-Content -Path $envCacheFile -Value $script;
 				break;
 			}
