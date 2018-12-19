@@ -6,6 +6,12 @@ function Get-PowerdFile([string]$Name) {
     return [IO.FileInfo]"$powerdDir\$Name";
 }
 
+function Get-PowerdDirectory([string]$Name) {
+    $homeDir = if($env:HOME) { $env:HOME } else { $env:USERPROFILE }
+    $powerdDir = [IO.DirectoryInfo]"$homeDir\Powerd";
+    return [IO.DirectoryInfo]"$powerdDir\$Name";
+}
+
 function Get-PowerdConfig() {
     $file = Get-PowerdFile "Config.json";
     if (! $file.Exists) {
