@@ -1,3 +1,5 @@
+Import-Module $PSScriptRoot/powerd-common.psm1;
+
 # Initialize Developer Environment from VS batch file
 function Initialize-Development {
 	$config = Get-PowerdConfig;
@@ -8,12 +10,13 @@ function Initialize-Development {
 	if($envCacheFile -and !$envCacheFile.Exists -and !$config.Development.IsDisabled) {
 		foreach($edition in $editions)
 		{
-			$vsDevCmd = [IO.FileInfo]"$([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86))\Microsoft Visual Studio\2017\$edition\Common7\Tools\VSDevCmd.bat";
-			if($vsDevCmd.Exists) {		
+			$vsDevCmd = [IO.FileInfo]"$([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86))\Microsoft Visual Studio\2019\$edition\Common7\Tools\VSDevCmd.bat";
+			if($vsDevCmd.Exists) {
+				Write-Host "Initializing Development using $edition";		
 				$effect = Get-BatchFileEnvironmentEffect -File $vsDevCmd -Arg "-arch=amd64";
 				$script = $effect.Keys | % {
 					$item = $effect[$_];
-					if($item.Before -eq $null) {
+					if($null -eq $item.Before) {
 						"`$env:$($_) = '$($item.After)'";
 					} else {
 						$diff = $item.After.Replace($item.Before, "").Trim(';');
@@ -32,6 +35,7 @@ function Initialize-Development {
 		}
 	}
 	if($envCacheFile.Exists) {
+		Write-Host "Initializing Development from cache";
 		. $envCacheFile;
 	}
 }
