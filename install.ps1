@@ -8,32 +8,43 @@ if($Development) {
         Install-Module posh-git -Scope CurrentUser;
     }
 
-    $docs = [Environment]::GetFolderPath("mydocuments");
-    $modules = [IO.DirectoryInfo]"$docs\WindowsPowerShell\Modules";
+    if($IsLinux -or $IsMacOS) {
+        $modules = [IO.DirectoryInfo]"~/.local/share/powershell/Modules";
+    } else {
+        $docs = [Environment]::GetFolderPath("mydocuments");
+        $modules = [IO.DirectoryInfo]"$docs/WindowsPowerShell/Modules";
+    }
     if(! $modules.Exists) {
         [IO.Directory]::CreateDirectory($modules.FullName);
     }
 
     # Create link
-    $link = "$modules\Powerd";
-    $target = "$PSScriptRoot\Modules\Powerd";
+    $link = "$modules/Powerd";
+    $target = "$PSScriptRoot/Modules/Powerd";
     if(! [IO.Directory]::Exists($link)) {
         Write-Host "Linking $target to $link";
-        cmd /c mklink /d $link $target;
+        if($IsLinux -Or $IsMacOS) {
+            ln -sd $target $link;
+        } else {
+            cmd /c mklink /d $link $target;
+        }
+        if($LASTEXITCODE -ne 0) {
+            throw "Error linking $target to $link";
+        }
     }
 
-    $profilePath = [IO.FileInfo]$profile;
-    if(! $profile.Exists) {
-        Set-Content $profilePath -Value "";
+    $profileFile = [IO.FileInfo]$profile;
+    if(! $profileFile.Exists) {
+        Set-Content $profileFile -Value "";
     }
-    $existing = Get-Content $profilePath;
+    $existing = Get-Content $profileFile;
     if(! ($existing -like '*posh-git*')) {
         Write-Host "Adding 'Import-Module posh-git;' to your PowerShell Profile";
-        Add-Content -Value "Import-Module posh-git;" -Path $profilePath;
+        Add-Content -Value "Import-Module posh-git;" -Path $profileFile;
     }
     if(! ($existing -like '*Powerd*')) {
         Write-Host "Adding 'Import-Module Powerd;' to your PowerShell Profile";
-        Add-Content -Value "Import-Module Powerd;" -Path $profilePath;
+        Add-Content -Value "Import-Module Powerd;" -Path $profileFile;
     }
 } else {
     throw "Not implemented";
