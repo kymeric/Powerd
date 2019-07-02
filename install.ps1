@@ -12,20 +12,23 @@ if($Development) {
         $modules = [IO.DirectoryInfo]"~/.local/share/powershell/Modules";
     } else {
         $docs = [Environment]::GetFolderPath("mydocuments");
-        $modules = [IO.DirectoryInfo]"$docs/WindowsPowerShell/Modules";
+        $modules = [IO.DirectoryInfo]"$docs\WindowsPowerShell\Modules";
     }
     if(! $modules.Exists) {
         [IO.Directory]::CreateDirectory($modules.FullName);
     }
 
     # Create link
-    $link = "$modules/Powerd";
-    $target = "$PSScriptRoot/Modules/Powerd";
     if(! [IO.Directory]::Exists($link)) {
-        Write-Host "Linking $target to $link";
         if($IsLinux -Or $IsMacOS) {
+            $link = "$modules/Powerd";
+            $target = "$PSScriptRoot/Modules/Powerd";
+            Write-Host "Linking $target to $link";
             ln -sd $target $link;
         } else {
+            $link = "$modules\Powerd";
+            $target = "$PSScriptRoot\Modules\Powerd";
+            Write-Host "Linking $target to $link";
             cmd /c mklink /d $link $target;
         }
         if($LASTEXITCODE -ne 0) {
