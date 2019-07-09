@@ -2,10 +2,15 @@ Import-Module $PSScriptRoot/powerd-common.psm1;
 
 # Initialize Developer Environment from VS batch file
 function Initialize-Development {
+	
+	if([Environment]::OSVersion.Platform -in @([PlatformID]::Unix, [PlatformID]::MacOSX)) {
+		return;
+	}
+
 	$config = Get-PowerdConfig;
 
 	$editions = @('Enterprise', 'Professional', 'Community', 'BuildTools');
-	$envCacheFile = Get-PowerdFile "Cache\Development-Environment-$([Environment]::MachineName).ps1"
+	$envCacheFile = Get-PowerdFile @('cache', "development-environment-$([Environment]::MachineName.ToLower()).ps1");
 
 	if($envCacheFile -and !$envCacheFile.Exists -and !$config.Development.IsDisabled) {
 		foreach($edition in $editions)

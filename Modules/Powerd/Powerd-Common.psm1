@@ -1,19 +1,21 @@
-Set-Variable -Name "Powerd" -Value @{Config = (Get-PowerdFile "Config.json")} -Scope global;
+Set-Variable -Name "Powerd" -Value @{Config = (Get-PowerdFile "config.json")} -Scope global;
 
-function Get-PowerdFile([string]$Name) {
+function Get-PowerdFile([string[]]$parts) {
     $homeDir = if($env:HOME) { $env:HOME } else { $env:USERPROFILE }
-    $powerdDir = [IO.DirectoryInfo]"$homeDir\Powerd";
-    return [IO.FileInfo]"$powerdDir\$Name";
+    $target = @($homeDir, ".powerd");
+    $target += $Parts;
+    return [IO.FileInfo]($target -join [IO.Path]::DirectorySeparatorChar);
 }
 
-function Get-PowerdDirectory([string]$Name) {
+function Get-PowerdDirectory([string[]]$Parts) {
     $homeDir = if($env:HOME) { $env:HOME } else { $env:USERPROFILE }
-    $powerdDir = [IO.DirectoryInfo]"$homeDir\Powerd";
-    return [IO.DirectoryInfo]"$powerdDir\$Name";
+    $target = @($homeDir, ".powerd");
+    $target += $Parts;
+    return [IO.DirectoryInfo]($target -join [IO.Path]::DirectorySeparatorChar);
 }
 
 function Get-PowerdConfig() {
-    $file = Get-PowerdFile "Config.json";
+    $file = Get-PowerdFile "config.json";
     if (! $file.Exists) {
         return @{};
     }
@@ -21,7 +23,7 @@ function Get-PowerdConfig() {
 }
 
 function Set-PowerdConfig($Config) {
-    $file = Get-PowerdFile "Config.json";
+    $file = Get-PowerdFile "config.json";
     if (! $file.Directory.Exists) {
         [IO.Directory]::CreateDirectory($file.Directory.FullName);
     }
@@ -49,13 +51,11 @@ function Get-PortablePath([string]$Path) {
     $specials = Get-SpecialPortablePaths;
     $paths = $paths + $specials;
 
-    # $paths | % { Write-Host "Entry: $_"; };
-
     $Path = (Convert-Path $Path).Trim('\', '/');
     foreach ($entry in $paths) {
         if ($Path -like "$($entry.Path)*") {
             $relativePath = $Path.Substring($entry.Path.Length);
-            $ret = "`$$($entry.Name)\$relativePath".Trim('\', '/');
+            $ret = [IO.Path]::Combine($entry.Name, $relativePath).Trim('\', '/');
             return $ret;
         }
     }

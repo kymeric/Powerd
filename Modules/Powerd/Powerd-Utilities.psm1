@@ -6,7 +6,7 @@ function Initialize-Utilities {
         $config.Utilities | % { Set-Alias $_.Name $ExecutionContext.InvokeCommand.ExpandString($_.Path) -Scope 'global' };
     }
 
-    $scripts = Get-PowerdDirectory -Name "scripts";
+    $scripts = Get-PowerdDirectory "scripts";
     if($scripts.Exists) {
         foreach($script in $scripts.GetFiles("*.ps1")) {
             $name = [IO.Path]::GetFileNameWithoutExtension($script.Name);
@@ -14,7 +14,7 @@ function Initialize-Utilities {
         }    
     }
 
-    $tools = Get-PowerdDirectory -Name "tools";
+    $tools = Get-PowerdDirectory "tools";
     if($tools.Exists) {
         foreach($tool in $tools.GetFiles("*.exe")) {
             $name = [IO.Path]::GetFileNameWithoutExtension($tool.Name);
