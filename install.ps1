@@ -12,7 +12,11 @@ if($Development) {
         $modules = [IO.DirectoryInfo]"~/.local/share/powershell/Modules";
     } else {
         $docs = [Environment]::GetFolderPath("mydocuments");
-        $modules = [IO.DirectoryInfo]"$docs\WindowsPowerShell\Modules";
+        if ($PSEdition -eq 'Core') {
+            $modules = [IO.DirectoryInfo]"$docs\PowerShell\Modules";
+        } else {
+            $modules = [IO.DirectoryInfo]"$docs\WindowsPowerShell\Modules";
+        }
     }
     if(! $modules.Exists) {
         [IO.Directory]::CreateDirectory($modules.FullName);
