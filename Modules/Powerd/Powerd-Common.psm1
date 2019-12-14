@@ -137,11 +137,43 @@ function Get-BatchFileEnvironmentEffect([IO.FileInfo]$File, [string]$Arg = $null
     return $ret;
 }
 
+function Get-OperatingSystem {
+    if($IsMacOS) {
+        return "Mac";
+    } elseif($IsLinux) {
+        return "Linux";
+    } else {
+        return "Windows";
+    }
+}
+
 function Initialize-Paths {
     $config = Get-PowerdConfig;
+    $operatingSystem = Get-OperatingSystem;
+    $machine = [Environment]::MachineName.ToLowerInvariant();
+
     if ($config.Paths) {
-        $config.Paths;
-        $config.Paths | % { Set-Variable $_.Name $ExecutionContext.InvokeCommand.ExpandString($_.Path) -Scope 'global'; };
+        $config.Paths | % { 
+            $path = $_.Path;
+
+            $osPaths = $config.OS.$operatingSystem.Paths;
+            if($osPaths) {
+                $value = $osPaths.$($_.Name);
+                if($value) {
+                    $path = $value;
+                }    
+            }
+
+            $machinePaths = $config.Machine.$machine.Paths;
+            if($machinePaths) {
+                $value = $machinePaths.$($_.Name);
+                if($value) {
+                    $path = $value;
+                }
+            }
+
+            Set-Variable $_.Name $ExecutionContext.InvokeCommand.ExpandString($path) -Scope 'global'; 
+        };
     }
 }
 
