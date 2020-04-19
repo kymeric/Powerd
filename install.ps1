@@ -9,7 +9,7 @@ if($Development) {
     }
 
     if($IsLinux -or $IsMacOS) {
-        $modules = [IO.DirectoryInfo]"~/.local/share/powershell/Modules";
+        $modules = [IO.DirectoryInfo]"$HOME/.local/share/powershell/Modules";
     } else {
         $docs = [Environment]::GetFolderPath("mydocuments");
         if ($PSEdition -eq 'Core') {
