@@ -3,7 +3,7 @@ param([switch]$Development = $true)
 if($Development) {
 
     $posh = Get-Module 'posh-git';
-    if(! $posh) {
+    if(-not $posh) {
         Write-Host "Installing Module: 'posh-git'";
         Install-Module posh-git -Scope CurrentUser;
     }
@@ -18,12 +18,12 @@ if($Development) {
             $modules = [IO.DirectoryInfo]"$docs\WindowsPowerShell\Modules";
         }
     }
-    if(! $modules.Exists) {
+    if(-not $modules.Exists) {
         [IO.Directory]::CreateDirectory($modules.FullName);
     }
 
     # Create link
-    if(! [IO.Directory]::Exists($link)) {
+    if(-not [IO.Directory]::Exists($link)) {
         if($IsLinux -Or $IsMacOS) {
             $link = "$modules/Powerd";
             $target = "$PSScriptRoot/Modules/Powerd";
@@ -41,15 +41,18 @@ if($Development) {
     }
 
     $profileFile = [IO.FileInfo]$profile;
-    if(! $profileFile.Exists) {
+    if(-not $profileFile.Exists) {
+        if(-not $profileFile.Directory.Exists) {
+            [IO.Directory]::CreateDirectory($profileFile.Directory.FullName);
+        }
         Set-Content $profileFile -Value "";
     }
     $existing = Get-Content $profileFile;
-    if(! ($existing -like '*posh-git*')) {
+    if(-not ($existing -like '*posh-git*')) {
         Write-Host "Adding 'Import-Module posh-git;' to your PowerShell Profile";
         Add-Content -Value "Import-Module posh-git;" -Path $profileFile;
     }
-    if(! ($existing -like '*Powerd*')) {
+    if(-not ($existing -like '*Powerd*')) {
         Write-Host "Adding 'Import-Module Powerd;' to your PowerShell Profile";
         Add-Content -Value "Import-Module Powerd;" -Path $profileFile;
     }
