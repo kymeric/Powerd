@@ -15,7 +15,10 @@ function Initialize-Development {
 	if($envCacheFile -and !$envCacheFile.Exists -and !$config.Development.IsDisabled) {
 		foreach($edition in $editions)
 		{
-			$vsDevCmd = [IO.FileInfo]"$([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86))\Microsoft Visual Studio\2019\$edition\Common7\Tools\VSDevCmd.bat";
+			$vsDevCmd = [IO.FileInfo]"$([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFiles))\Microsoft Visual Studio\2022\$edition\Common7\Tools\VSDevCmd.bat";
+			if(-not $vsDevCmd.Exists) {
+				$vsDevCmd = [IO.FileInfo]"$([Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86))\Microsoft Visual Studio\2019\$edition\Common7\Tools\VSDevCmd.bat";
+			}
 			if($vsDevCmd.Exists) {
 				Write-Host "Initializing Development using $edition";		
 				$effect = Get-BatchFileEnvironmentEffect -File $vsDevCmd -Arg "-arch=amd64";
