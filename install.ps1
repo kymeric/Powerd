@@ -33,7 +33,7 @@ if($Development) {
             $link = "$modules\Powerd";
             $target = "$PSScriptRoot\Modules\Powerd";
             Write-Host "Linking $target to $link";
-            cmd /c mklink /d $link $target;
+            New-Item -ItemType SymbolicLink -Path $link -Target $target;
         }
         if($LASTEXITCODE -ne 0) {
             throw "Error linking $target to $link";
