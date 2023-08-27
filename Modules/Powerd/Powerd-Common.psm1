@@ -16,6 +16,7 @@ function Get-PowerdDirectory([string[]]$Parts) {
 
 function Get-PowerdConfig() {
     $file = Get-PowerdFile "config.json";
+    Write-Debug "Config file: $($file.FullName)";
     if (! $file.Exists) {
         return @{};
     }
@@ -84,6 +85,7 @@ function Set-Path([string]$Path, [string]$Name) {
     $config.Paths += @{Name = $Name; Path = $Path};
     
     Set-PowerdConfig $config;
+    Write-Host "Setting $Name to $Path";
     Set-Variable $Name $Path -Scope 'global';
 }
 
@@ -148,10 +150,12 @@ function Get-OperatingSystem {
 }
 
 function Initialize-Paths {
+    Write-Debug "Initializing Paths...";
     $config = Get-PowerdConfig;
     $operatingSystem = Get-OperatingSystem;
     $machine = [Environment]::MachineName.ToLowerInvariant();
 
+    Write-Debug "Config values: $($config | ConvertTo-Json -Depth 4)";
     if ($config.Paths) {
         $config.Paths | % { 
             $path = $_.Path;
@@ -172,7 +176,9 @@ function Initialize-Paths {
                 }
             }
 
-            Set-Variable $_.Name $ExecutionContext.InvokeCommand.ExpandString($path) -Scope 'global'; 
+            $value = $ExecutionContext.InvokeCommand.ExpandString($path);
+            Write-Debug "Path $($_.Name): $path = $value";
+            Set-Variable $_.Name -Value $value -Scope 'global'; 
         };
     }
 }
